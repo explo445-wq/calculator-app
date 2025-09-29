@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간단한 계산기</title>
+    <style>
+        /* CSS: 디자인 및 모바일 최적화 */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .calculator {
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 90%; /* 모바일 환경을 위해 너비 90% 설정 */
+            max-width: 300px; /* 최대 너비 제한 */
+            background-color: #fff;
+            padding: 10px;
+        }
+
+        #display {
+            width: 100%;
+            height: 60px;
+            font-size: 2em;
+            text-align: right;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box; /* 패딩이 너비를 초과하지 않도록 설정 */
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4열 그리드 */
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 20px 0; /* 터치를 쉽게 하기 위해 패딩을 크게 설정 */
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:active {
+            opacity: 0.8; /* 터치 시 피드백 제공 */
+        }
+
+        .operator {
+            background-color: #ff9500;
+            color: white;
+        }
+
+        .clear {
+            background-color: #ff3b30;
+            color: white;
+        }
+
+        .equals {
+            background-color: #34c759;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <input type="text" id="display" disabled value="0">
+
+        <div class="buttons">
+            <button class="btn clear" onclick="clearDisplay()">C</button>
+            <button class="btn operator" onclick="appendOperator('/')">/</button>
+            <button class="btn operator" onclick="appendOperator('*')">*</button>
+            <button class="btn operator" onclick="appendOperator('-')">-</button>
+
+            <button class="btn" onclick="appendNumber(7)">7</button>
+            <button class="btn" onclick="appendNumber(8)">8</button>
+            <button class="btn" onclick="appendNumber(9)">9</button>
+            <button class="btn operator" onclick="appendOperator('+')">+</button>
+
+            <button class="btn" onclick="appendNumber(4)">4</button>
+            <button class="btn" onclick="appendNumber(5)">5</button>
+            <button class="btn" onclick="appendNumber(6)">6</button>
+            <button class="btn equals" onclick="calculateResult()">=</button>
+
+            <button class="btn" onclick="appendNumber(1)">1</button>
+            <button class="btn" onclick="appendNumber(2)">2</button>
+            <button class="btn" onclick="appendNumber(3)">3</button>
+            <button class="btn" onclick="appendNumber(0)">0</button>
+            <button class="btn" onclick="appendDecimal('.')">.</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        let currentInput = '';
+        let operator = null;
+        let prevValue = null;
+
+        // 숫자를 화면에 추가
+        function appendNumber(number) {
+            if (currentInput === '0' && number !== 0) {
+                currentInput = String(number);
+            } else if (currentInput === '0' && number === 0) {
+                return; // 000... 입력 방지
+            } else {
+                currentInput += String(number);
+            }
+            updateDisplay(currentInput);
+        }
+
+        // 소수점(.)을 추가
+        function appendDecimal(dot) {
+            if (!currentInput.includes(dot)) {
+                currentInput += dot;
+                updateDisplay(currentInput);
+            }
+        }
+
+        // 연산자를 설정
+        function appendOperator(nextOperator) {
+            if (currentInput === '' && prevValue === null) return;
+            
+            if (prevValue !== null && currentInput !== '') {
+                // 이전 연산 결과가 있고, 현재 입력된 값이 있으면 먼저 계산
+                calculateResult();
+            }
+
+            if (currentInput !== '') {
+                prevValue = parseFloat(currentInput);
+            }
+            
+            operator = nextOperator;
+            currentInput = ''; // 다음 숫자 입력을 위해 초기화
+            updateDisplay(prevValue + ' ' + operator); // 연산자가 포함된 상태 표시
+        }
+
+        // 결과를 계산
+        function calculateResult() {
+            if (prevValue === null || operator === null || currentInput === '') {
+                return; // 계산할 준비가 안 되었으면 종료
+            }
+
+            const currentValue = parseFloat(currentInput);
+            let result = 0;
+
+            switch (operator) {
+                case '+':
+                    result = prevValue + currentValue;
+                    break;
+                case '-':
+                    result = prevValue - currentValue;
+                    break;
+                case '*':
+                    result = prevValue * currentValue;
+                    break;
+                case '/':
+                    if (currentValue === 0) {
+                        alert("0으로 나눌 수 없습니다.");
+                        clearDisplay();
+                        return;
+                    }
+                    result = prevValue / currentValue;
+                    break;
+            }
+
+            // 결과 업데이트 및 변수 초기화
+            currentInput = String(result);
+            operator = null;
+            prevValue = null;
+            updateDisplay(currentInput);
+        }
+
+        // 화면을 초기화 (C 버튼)
+        function clearDisplay() {
+            currentInput = '';
+            operator = null;
+            prevValue = null;
+            updateDisplay('0');
+        }
+
+        // 화면 텍스트를 업데이트
+        function updateDisplay(text) {
+            display.value = text;
+        }
+    </script>
+</body>
+</html>
